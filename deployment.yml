@@ -1,0 +1,27 @@
+---
+ - hosts: master
+   tasks:
+   - name: Creating CNI/Flannel
+     shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+   - name: Launching WordPress
+     shell: kubectl run mywp --image=wordpress:5.1.1-php7.3-apache
+     register: a
+   - debug:
+           var: a
+   - name: Launching MYSQL Database
+     shell: kubectl run mydb --image=mysql:5.7 --env=MYSQL_ROOT_PASSWORD=kalpana --env=MYSQL_DATABASE=db --env=MYSQL_USER=kalpana --env=MYSQL_PASSWORD=kalpana
+   - name: Getting pods
+     shell: kubectl get pods
+     register: b
+   - debug:
+           var: b
+
+   - name: Exposing WordPress pod
+     shell: kubectl expose pod mywp --port=80 --type=NodePort
+   - name: Exposing MYSQL Database pod
+     shell: kubectl expose pod mydb --port=3306 --type=NodePort
+   - name: Getting Service
+     shell: kubectl get svc
+     register: c
+   - debug: 
+           var: c

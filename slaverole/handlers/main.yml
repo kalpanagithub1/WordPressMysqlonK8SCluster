@@ -1,0 +1,6 @@
+---
+# handlers file for slaverole
+ - name: "Restart docker services"
+   service:
+           name: docker
+           state: restarted

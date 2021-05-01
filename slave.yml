@@ -1,0 +1,22 @@
+---
+             
+ - hosts: master
+   tasks:
+   - name: Creating token
+     shell:
+        cmd: kubeadm token create --print-join-command
+     register: b
+   - debug:
+         var: b['stdout']
+   - add_host:
+           name: "tokentojoin"
+           link: "{{ b['stdout'] }}"
+ - hosts: worker
+   roles:
+           - role: slaverole
+   tasks:
+           - name: Join WorkerNode
+             shell: "{{ hostvars['tokentojoin']['link'] }}"
+             ignore_errors: yes
+
+

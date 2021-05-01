@@ -1,0 +1,73 @@
+---
+ - hosts: localhost
+   vars_prompt:
+       -   name: master_name
+           private: no
+           prompt: "Enter name for master os"
+       -   name: worker1_name
+           private: no
+           prompt: "Enter name for worker os1"
+       -   name: worker2_name
+           private: no
+           prompt: "Enter name for worker os2"
+   tasks:
+   - name: Installing boto3 python package
+     pip:
+         name: boto3
+   - name: Launching ec2 instance for master
+     ec2_instance:
+         region: ap-south-1
+         image_id: ami-081bb417559035fe8
+         instance_type: t2.micro
+         vpc_subnet_id: subnet-013b70e5118052f6a
+         security_group: sg-0a04e6c1e9c856fbb
+         key_name: NewKeyTask12
+         name: "{{ master_name }}"
+         state: present
+         aws_access_key: AKIA5VMGLKJUCH35DXQQ
+         aws_secret_key: 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
+     register: MasterInstance
+   - debug: 
+          var: MasterInstance.instances[0].public_ip_address
+
+   - name: Launching instance for Workernode1
+     ec2_instance:
+         region: ap-south-1
+         image_id: ami-081bb417559035fe8
+         instance_type: t2.micro
+         vpc_subnet_id: subnet-013b70e5118052f6a
+         security_group: sg-0a04e6c1e9c856fbb
+         key_name: NewKeyTask12
+         name: "{{ worker1_name }}"
+         state: present
+         aws_access_key: AKIA5VMGLKJUCH35DXQQ
+         aws_secret_key: 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
+     register: WorkerInstance1
+   - debug:
+          var: WorkerInstance1.instances[0].public_ip_address
+
+   - name: Launching instance for Workernode2 
+     ec2_instance:
+         region: ap-south-1
+         image_id: ami-081bb417559035fe8
+         instance_type: t2.micro
+         vpc_subnet_id: subnet-013b70e5118052f6a
+         security_group: sg-0a04e6c1e9c856fbb
+         key_name: NewKeyTask12
+         name: "{{ worker2_name }}"
+         state: present
+         aws_access_key: AKIA5VMGLKJUCH35DXQQ
+         aws_secret_key: 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
+     register: WorkerInstance2
+   - debug:
+          var: WorkerInstance2.instances[0].public_ip_address
+
+   - name: Updating these Instance IPs in Inventory file
+     blockinfile:
+             path: /root/ip.txt
+             block: |
+                    [master]
+                    {{ MasterInstance.instances[0].public_ip_address }} ansible_user=ec2-user ansible_ssh_private_key_file=/root/NewKeyTask12.pem
+                    [worker]
+                    {{ WorkerInstance1.instances[0].public_ip_address }} ansible_user=ec2-user ansible_ssh_private_key_file=/root/NewKeyTask12.pem
+                    {{ WorkerInstance2.instances[0].public_ip_address }} ansible_user=ec2-user ansible_ssh_private_key_file=/root/NewKeyTask12.pem
